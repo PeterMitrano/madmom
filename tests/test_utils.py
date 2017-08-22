@@ -386,6 +386,14 @@ class TestQuantizeEventsFunction(unittest.TestCase):
         correct = [20, 25, 30]
         self.assertTrue(np.allclose(idx, correct))
 
+    def test_errors(self):
+        with self.assertRaises(ValueError):
+            quantize_events(1, fps=100)
+        with self.assertRaises(ValueError):
+            quantize_events([[0], [1], [2]], fps=100)
+        with self.assertRaises(ValueError):
+            quantize_events(np.arange(9).reshape((3, 3, 3)), fps=100)
+
 
 class TestSegmentAxisFunction(unittest.TestCase):
 
