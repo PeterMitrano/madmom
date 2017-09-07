@@ -388,9 +388,10 @@ def quantize_events(events, fps, length=None, shift=None):
     fps : float
         Quantize with `fps` frames per second.
     length : int, optional
-        Length of the returned array.
+        Length of the returned array. If 'None', the length will be set
+        according to the latest event.
     shift : float, optional
-        Shift the events by this value before quantization.
+        Shift the events by `shift` seconds before quantization.
 
     Returns
     -------
@@ -422,6 +423,97 @@ def quantize_events(events, fps, length=None, shift=None):
     idx = np.unique(np.round(events).astype(np.int))
     quantized[idx] = 1
     # return the quantized array
+    return quantized
+
+
+def quantize_notes(notes, fps, length=None, num_notes=None, shift=None,
+                   offset=None, velocity=None):
+    """
+    Quantize the notes with the given resolution.
+
+    Parameters
+    ----------
+    notes : 2D numpy array
+        Notes to be quantized.
+    fps : float
+        Quantize with `fps` frames per second.
+    length : int, optional
+        Length of the returned array. If 'None', the length will be set
+        according to the latest sounding note.
+    num_notes : int, optional
+        Number of notes of the returned array. If 'None', the number of notes
+        will be based on the highest note number in the `notes` array. All note
+        numbers equal or greater this value will not be included in the
+        returned quantized array.
+    shift : float, optional
+        Shift the events by `shift` seconds before quantization.
+    offset : int or numpy array, optional
+        Apply this offset to the note numbers. If an integer value is given it
+        will be used for all note numbers. An array can be used to map notes
+        numbers arbitrarily. If a note number becomes negative, it will be not
+        included in the returned quantized array.
+    velocity : float, optional
+        Use this velocity for all quantized notes.
+
+    Returns
+    -------
+    numpy array
+        Quantized notes.
+
+    Notes
+    -----
+    Expected notes format (additional columns will be ignored):
+
+    'note_time' 'note_number' ['duration' ['velocity']]
+
+    """
+    # convert to numpy array or create a copy if needed
+    notes = np.array(np.array(notes).T, dtype=np.float, ndmin=2).T
+    # check supported dims and shapes
+    if notes.ndim != 2:
+        raise ValueError('only 2-dimensional notes supported.')
+    if notes.shape[1] < 2:
+        raise ValueError('notes must have at least 2 columns.')
+    # split the notes into columns
+    note_onsets = notes[:, 0]
+    note_numbers = notes[:, 1].astype(np.int)
+    # shift note onsets (before inferring offsets if needed)
+    if shift:
+        note_onsets += shift
+    note_offsets = np.copy(note_onsets)
+    if notes.shape[1] > 2:
+        note_offsets += notes[:, 2]
+    if notes.shape[1] > 3 and velocity is None:
+        note_velocities = notes[:, 3]
+    else:
+        velocity = velocity or 1
+        print(velocity)
+        note_velocities = np.ones(len(notes)) * velocity
+    # determine length of quantized array
+    if length is None:
+        # set the length to be long enough to cover all notes
+        length = int(round(np.max(note_offsets) * float(fps))) + 1
+    # offset note numbers
+    if offset is not None:
+        try:
+            note_numbers += offset[note_numbers]
+        except TypeError:
+            note_numbers += offset
+    # determine width of quantized array
+    if num_notes is None:
+        num_notes = int(np.max(note_numbers)) + 1
+    # init array
+    quantized = np.zeros((length, num_notes))
+    # quantize
+    note_onsets = np.round((note_onsets * fps)).astype(np.int)
+    note_offsets = np.round((note_offsets * fps)).astype(np.int) + 1
+    # iterate over all notes
+    for n, note in enumerate(notes):
+        # use only the notes which fit in the array and note number >= 0
+        if num_notes > note_numbers[n] >= 0:
+            quantized[note_onsets[n]:note_offsets[n], note_numbers[n]] = \
+                note_velocities[n]
+    # return quantized array
     return quantized
 
 
