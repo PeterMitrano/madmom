@@ -33,3 +33,11 @@
 
 # Sphinx documentation
 /docs/_build/
+
+# Music
+*.wav
+*.mp3
+
+# output
+outputs
+*.beats.txt
