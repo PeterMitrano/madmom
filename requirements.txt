@@ -1,3 +1,4 @@
+pyaudio>=0.2.8
 numpy>=1.8.1
 scipy>=0.16
 cython>=0.22.1
