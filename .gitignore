@@ -41,3 +41,6 @@
 # output
 outputs
 *.beats.txt
+*.npz
+*.npy
+*.zip
