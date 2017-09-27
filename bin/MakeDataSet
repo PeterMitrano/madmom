@@ -3,7 +3,7 @@ import os
 import csv
 import glob
 
-from madmom.custom_processors import ImShowOutputProcessor, SaveOutputProcessor
+from madmom.custom_processors import ImShowOutputProcessor, SaveOutputProcessor, LabelOutputProcessor
 from madmom.features.tf_beats import TfRhythmicGroupingPreProcessor
 from madmom.processors import process_single, IOProcessor, SequentialProcessor
 
@@ -22,21 +22,26 @@ def main():
         responses_path = os.path.join(os.path.dirname(args.map_file), row[1], "*.csv")
 
         csv_files = glob.glob(responses_path, recursive=False)
+        # iterate over each participant who responded to this sample
+        all_responses_to_sample = []
         for csv_file in csv_files:
             csv_reader = csv.reader(open(csv_file, 'r'))
+            # iterate over each trial in which the participant heard this sample
             for trial in csv_reader:
                 responses = [float(r) for r in trial]
+                all_responses_to_sample.append(responses)
+                # TODO: make sure the start times are 0
 
         preprocessor = TfRhythmicGroupingPreProcessor()
         infile = open(sample_path, 'rb')
-        outfile = open('network_inputs.npy', 'wb')
+        outfile = 'dataset.npz'
 
         save_processor = SaveOutputProcessor()
         imshow_processor = ImShowOutputProcessor()
-        out_processor = SequentialProcessor([save_processor, imshow_processor])
+        label_processor = LabelOutputProcessor(all_responses_to_sample)
 
         # create an IOProcessor
-        processor = IOProcessor(preprocessor, imshow_processor)
+        processor = IOProcessor(preprocessor, label_processor)
         process_single(processor, infile, outfile, **vars(args))
 
 

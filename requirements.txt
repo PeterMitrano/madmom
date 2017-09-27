@@ -1,3 +1,4 @@
+matplotlib
 pandas
 pyaudio>=0.2.8
 numpy>=1.8.1
