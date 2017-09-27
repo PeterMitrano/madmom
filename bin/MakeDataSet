@@ -3,19 +3,41 @@ import os
 import csv
 import glob
 
+from madmom.custom_processors import ImShowOutputProcessor, SaveOutputProcessor
+from madmom.features.tf_beats import TfRhythmicGroupingPreProcessor
+from madmom.processors import process_single, IOProcessor, SequentialProcessor
+
 
 def main():
-    """ read a directory of CSV files and create a test-validate-train data set """
     parser = argparse.ArgumentParser()
-    parser.add_argument('data_dir', help='directory containing CSVs you want to make a data set out of')
+    parser.add_argument('map_file')
     args = parser.parse_args()
 
-    csv_files = glob.glob(os.path.join(args.data_dir, "*.csv"), recursive=False)
-    for csv_file in csv_files:
-        csv_reader = csv.reader(open(csv_file, 'r'))
-        for trial in csv_reader:
-            for response in trial:
-                print(float(response))
+    map_reader = csv.reader(open(args.map_file, 'r'))
+    next(map_reader)  # skip header
+
+    # iterate over each sample
+    for row in map_reader:
+        sample_path = os.path.join(os.path.dirname(args.map_file), row[0])
+        responses_path = os.path.join(os.path.dirname(args.map_file), row[1], "*.csv")
+
+        csv_files = glob.glob(responses_path, recursive=False)
+        for csv_file in csv_files:
+            csv_reader = csv.reader(open(csv_file, 'r'))
+            for trial in csv_reader:
+                responses = [float(r) for r in trial]
+
+        preprocessor = TfRhythmicGroupingPreProcessor()
+        infile = open(sample_path, 'rb')
+        outfile = open('network_inputs.npy', 'wb')
+
+        save_processor = SaveOutputProcessor()
+        imshow_processor = ImShowOutputProcessor()
+        out_processor = SequentialProcessor([save_processor, imshow_processor])
+
+        # create an IOProcessor
+        processor = IOProcessor(preprocessor, imshow_processor)
+        process_single(processor, infile, outfile, **vars(args))
 
 
 if __name__ == '__main__':

@@ -44,3 +44,4 @@ outputs
 *.npz
 *.npy
 *.zip
+data
