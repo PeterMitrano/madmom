@@ -1,6 +1,7 @@
-import numpy as np
-from madmom.processors import OutputProcessor
 import matplotlib.pyplot as plt
+import numpy as np
+
+from madmom.processors import OutputProcessor
 
 
 class SaveOutputProcessor(OutputProcessor):
@@ -46,4 +47,17 @@ class LabelOutputProcessor(OutputProcessor):
             labels[i] = count / len(self.all_responses)
         print("writing labels to file: {}".format(output))
         np.savez(output, x=data, labels=labels)
-        return output
+        return data
+
+
+class PlotActivationsProcessor(OutputProcessor):
+    def process(self, data, output=None, **kwargs):
+        import matplotlib.pyplot as plt
+
+        plt.plot(data[:, 0], label='beat')
+        plt.plot(data[:, 1], label='down beat')
+        plt.title("Softmax Activations")
+        plt.legend(loc=2)
+        plt.show()
+
+        return data
