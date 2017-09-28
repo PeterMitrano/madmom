@@ -1,14 +1,18 @@
 import argparse
-import os
 import csv
 import glob
+import os
 
 from madmom.custom_processors import ImShowOutputProcessor, SaveOutputProcessor, LabelOutputProcessor
 from madmom.features.tf_beats import TfRhythmicGroupingPreProcessor
-from madmom.processors import process_single, IOProcessor, SequentialProcessor
+from madmom.processors import process_single, IOProcessor
 
 
 def main():
+    """
+    Takes in a file mapping samples to responses,
+    and creates an npz file with the network inputs (filtered audio) and labels
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('map_file')
     parser.add_argument('--fps', action='store', type=float, default=100, help='frames per second [default=100]')
@@ -36,8 +40,11 @@ def main():
             all_responses_to_sample.append(participant_responses)
 
         preprocessor = TfRhythmicGroupingPreProcessor()
+        if not os.path.exists(sample_path):
+            raise ValueError("Sample path {} does not exist.".format(sample_path))
+
         infile = open(sample_path, 'rb')
-        outfile = 'dataset.npz'
+        outfile = 'data/dataset.npz'
 
         save_processor = SaveOutputProcessor()
         imshow_processor = ImShowOutputProcessor()
