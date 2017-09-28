@@ -33,6 +33,9 @@ def main():
     # signal processing arguments
     SignalProcessor.add_arguments(p, norm=False, gain=0)
 
+    # output arguments
+    PlotActivationsProcessor.add_arguments(p)
+
     # parse arguments
     args = p.parse_args()
 

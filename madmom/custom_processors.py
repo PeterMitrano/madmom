@@ -54,10 +54,24 @@ class PlotActivationsProcessor(OutputProcessor):
     def process(self, data, output=None, **kwargs):
         import matplotlib.pyplot as plt
 
-        plt.plot(data[:, 0], label='beat')
-        plt.plot(data[:, 1], label='down beat')
+        start_idx = kwargs.get('start_idx', 0)
+        end_idx = kwargs.get('end_idx', -1)
+
+        if end_idx == -1:
+            end_idx = data.shape[0]
+
+        t = range(start_idx, end_idx)
+        print("plotting from {} to {}".format(start_idx, end_idx))
+
+        plt.plot(t, data[start_idx:end_idx, 0], label='beat')
+        plt.plot(t, data[start_idx:end_idx, 1], label='down beat')
         plt.title("Softmax Activations")
         plt.legend(loc=2)
         plt.show()
 
         return data
+
+    @classmethod
+    def add_arguments(cls, parser):
+        parser.add_argument('--start-idx', default=0, type=int, help='frame number to start plotting at')
+        parser.add_argument('--end-idx', default=-1, type=int, help='frame number to stop plotting at')
