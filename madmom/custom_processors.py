@@ -4,26 +4,6 @@ import numpy as np
 from madmom.processors import OutputProcessor
 
 
-class SaveOutputProcessor(OutputProcessor):
-    """ saved arbitrary data instance. """
-
-    def process(self, data, output, **kwargs):
-        # pylint: disable=arguments-differ
-        print("saving data to file: {}".format(output))
-        np.save(output, data)
-        return data
-
-
-class ImShowOutputProcessor(OutputProcessor):
-    """ saved arbitrary data instance. """
-
-    def process(self, data, output=None, **kwargs):
-        # pylint: disable=arguments-differ
-        plt.imshow(data.T)
-        plt.show()
-        return data
-
-
 class LabelOutputProcessor(OutputProcessor):
     """ saved arbitrary data instance. """
 
@@ -47,6 +27,26 @@ class LabelOutputProcessor(OutputProcessor):
             labels[i] = count / len(self.all_responses)
         print("writing labels to file: {}".format(output))
         np.savez(output, x=data, labels=labels)
+        return data
+
+
+class SaveOutputProcessor(OutputProcessor):
+    """ saved arbitrary data instance. """
+
+    def process(self, data, output, **kwargs):
+        # pylint: disable=arguments-differ
+        print("saving data to file: {}".format(output))
+        np.save(output, data)
+        return data
+
+
+class ImShowOutputProcessor(OutputProcessor):
+    """ saved arbitrary data instance. """
+
+    def process(self, data, output=None, **kwargs):
+        # pylint: disable=arguments-differ
+        plt.imshow(data.T)
+        plt.show()
         return data
 
 

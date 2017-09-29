@@ -57,9 +57,11 @@ class TfRhythmicGroupingPreProcessor(SequentialProcessor):
 
         # process the multi-resolution spec & diff in parallel
         multi = ParallelProcessor([])
+        # frame size of 1024 means 1024 samples per frame, and with 44100 samples per second
+        # that equals 23.22 milliseconds per frame
         frame_sizes = [1024, 2048, 4096]
-        num_bands = [3, 6, 12]
-        for frame_size, num_bands in zip(frame_sizes, num_bands):
+        num_bands_list = [3, 6, 12]
+        for frame_size, num_bands in zip(frame_sizes, num_bands_list):
             frames = FramedSignalProcessor(frame_size=frame_size, fps=100)
             stft = ShortTimeFourierTransformProcessor()  # caching FFT window
             filt = FilteredSpectrogramProcessor(num_bands=num_bands, fmin=30, fmax=17000, norm_filters=True)
