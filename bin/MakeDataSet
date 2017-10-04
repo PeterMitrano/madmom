@@ -10,35 +10,35 @@ from madmom.processors import process_single, IOProcessor
 
 def main():
     """
-    Takes in a file mapping samples to responses,
-    and creates an npz file with the network inputs (filtered audio) and labels
+    creates an npz file with the network inputs (filtered audio) and labels
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('map_file')
+    parser.add_argument('data_directory')
     parser.add_argument('--fps', action='store', type=float, default=100, help='frames per second [default=100]')
     args = parser.parse_args()
 
-    map_reader = csv.reader(open(args.map_file, 'r'))
-    next(map_reader)  # skip header
+    responses_dir = os.path.join(args.data_directory, "responses")
+    samples_dir = os.path.join(args.data_directory, "samples")
 
-    # iterate over each sample
-    for row in map_reader:
-        sample_path = os.path.join(os.path.dirname(args.map_file), row[0])
-        responses_path = os.path.join(os.path.dirname(args.map_file), row[1], "*.csv")
+    # iterate over each trial (one person taking the study)
+    trial_files = glob.glob(os.path.join(responses_dir, "*.csv"), recursive=False)
+    sample_responses_dict = {}
+    for trial_file in trial_files:
+        trial_reader = csv.reader(open(trial_file, 'r'))
 
-        csv_files = glob.glob(responses_path, recursive=False)
-        # iterate over each participant who responded to this sample
-        all_responses_to_sample = []
-        for csv_file in csv_files:
-            csv_reader = csv.reader(open(csv_file, 'r'))
-            # iterate over each trial in which the participant heard this sample
-            participant_responses = []
-            for trial in csv_reader:
-                for response in trial:
-                    # TODO: make sure the start times are 0
-                    participant_responses.append(float(response))
-            all_responses_to_sample.append(participant_responses)
+        # iterate over each time they heard the various samples
+        for sample_instance in trial_reader:
+            # iterate over each time stamp at which they indicated the start of a group
+            responses = sample_instance[1].split(" ")[1:-1]
+            sample_name = sample_instance[1].split(" ")[-1][:-1]
 
+            if sample_name not in sample_responses_dict:
+                sample_responses_dict[sample_name] = []
+
+            sample_responses_dict[sample_name].append([float(r) for r in responses])
+
+    for sample_name, responses in sample_responses_dict.items():
+        sample_path = os.path.join(samples_dir, sample_name)
         preprocessor = TfRhythmicGroupingPreProcessor()
         if not os.path.exists(sample_path):
             raise ValueError("Sample path {} does not exist.".format(sample_path))
@@ -48,7 +48,7 @@ def main():
 
         save_processor = SaveOutputProcessor()
         imshow_processor = ImShowOutputProcessor()
-        label_processor = LabelOutputProcessor(all_responses_to_sample, args.fps)
+        label_processor = LabelOutputProcessor(responses, args.fps)
 
         # create an IOProcessor
         processor = IOProcessor(preprocessor, label_processor)
