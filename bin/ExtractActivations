@@ -57,7 +57,8 @@ def main():
     processor = IOProcessor(in_processor, plot_processor)
 
     # and call the processing function
-    args.func(processor, **vars(args))
+    if 'func' in dir(args):
+        args.func(processor, **vars(args))
 
 
 if __name__ == '__main__':

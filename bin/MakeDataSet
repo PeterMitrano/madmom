@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import csv
 import glob
@@ -29,8 +31,8 @@ def main():
         # iterate over each time they heard the various samples
         for sample_instance in trial_reader:
             # iterate over each time stamp at which they indicated the start of a group
-            responses = sample_instance[1].split(" ")[1:-1]
-            sample_name = sample_instance[1].split(" ")[-1][:-1]
+            responses = sample_instance[1].split(" ")
+            sample_name = sample_instance[2]
 
             if sample_name not in sample_responses_dict:
                 sample_responses_dict[sample_name] = []
