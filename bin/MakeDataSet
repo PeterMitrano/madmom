@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
+import numpy as np
 import csv
 import glob
 import os
 
 from madmom.custom_processors import ImShowOutputProcessor, SaveOutputProcessor, LabelOutputProcessor
 from madmom.features.tf_beats import TfRhythmicGroupingPreProcessor
-from madmom.processors import process_single, IOProcessor
+from madmom.processors import process_single, IOProcessor, _process
 
 
 def main():
@@ -21,6 +22,16 @@ def main():
 
     responses_dir = os.path.join(args.data_directory, "responses")
     samples_dir = os.path.join(args.data_directory, "samples")
+    output_dir = os.path.join(args.data_directory, "dataset")
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+    output_path = os.path.join(output_dir, "dataset.npz")
+    if os.path.exists(output_path):
+        k = input("This will overwrite the existing file [{}]. [y/N] ".format(output_path))
+        if k not in ['yes', 'Y', 'y', 'YES']:
+            print("Aborting.")
+            return
 
     # iterate over each trial (one person taking the study)
     trial_files = glob.glob(os.path.join(responses_dir, "*.csv"), recursive=False)
@@ -39,6 +50,8 @@ def main():
 
             sample_responses_dict[sample_name].append([float(r) for r in responses])
 
+    data = None
+    labels = None
     for sample_name, responses in sample_responses_dict.items():
         sample_path = os.path.join(samples_dir, sample_name)
         preprocessor = TfRhythmicGroupingPreProcessor()
@@ -46,15 +59,22 @@ def main():
             raise ValueError("Sample path {} does not exist.".format(sample_path))
 
         infile = open(sample_path, 'rb')
-        outfile = 'data/dataset.npz'
 
-        save_processor = SaveOutputProcessor()
-        imshow_processor = ImShowOutputProcessor()
+        # save_processor = SaveOutputProcessor()
+        # imshow_processor = ImShowOutputProcessor()
         label_processor = LabelOutputProcessor(responses, args.fps)
 
         # create an IOProcessor
         processor = IOProcessor(preprocessor, label_processor)
-        process_single(processor, infile, outfile, **vars(args))
+        sample_data, sample_labels = _process((processor, infile, None, vars(args)))
+        if data is None:
+            data = sample_data
+            labels = sample_labels
+        else:
+            np.append(data, sample_data, axis=0)
+            np.append(labels, sample_labels, axis=0)
+
+    np.savez(output_path, x=data, labels=labels)
 
 
 if __name__ == '__main__':

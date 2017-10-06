@@ -25,9 +25,7 @@ class LabelOutputProcessor(OutputProcessor):
                         count += 1
                         break
             labels[i] = count / len(self.all_responses)
-        print("writing labels to file: {}".format(output))
-        np.savez(output, x=data, labels=labels)
-        return data
+        return data, labels
 
 
 class SaveOutputProcessor(OutputProcessor):
