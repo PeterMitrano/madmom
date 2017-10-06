@@ -21,7 +21,8 @@ class LabelOutputProcessor(OutputProcessor):
             t1 = (i + 1) / self.fps
             for participant_responses in self.all_responses:
                 for response in participant_responses:
-                    if t0 < response < t1:
+                    response = response / 1000
+                    if t0 < response + 0.03 and response - 0.03 < t1:
                         count += 1
                         break
             labels[i] = count / len(self.all_responses)
