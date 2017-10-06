@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
 import argparse
-import numpy as np
 import csv
 import glob
 import os
 
-from madmom.custom_processors import ImShowOutputProcessor, SaveOutputProcessor, LabelOutputProcessor
+import matplotlib.pyplot as plt
+import numpy as np
+
+from madmom.custom_processors import LabelOutputProcessor
 from madmom.features.tf_beats import TfRhythmicGroupingPreProcessor
-from madmom.processors import process_single, IOProcessor, _process
+from madmom.processors import IOProcessor, _process
 
 
 def main():
@@ -52,6 +54,7 @@ def main():
 
     data = None
     labels = None
+    sample_names = []
     for sample_name, responses in sample_responses_dict.items():
         sample_path = os.path.join(samples_dir, sample_name)
         preprocessor = TfRhythmicGroupingPreProcessor()
@@ -60,8 +63,6 @@ def main():
 
         infile = open(sample_path, 'rb')
 
-        # save_processor = SaveOutputProcessor()
-        # imshow_processor = ImShowOutputProcessor()
         label_processor = LabelOutputProcessor(responses, args.fps)
 
         # create an IOProcessor
@@ -71,10 +72,13 @@ def main():
             data = sample_data
             labels = sample_labels
         else:
-            np.append(data, sample_data, axis=0)
-            np.append(labels, sample_labels, axis=0)
+            data = np.concatenate((data, sample_data), axis=0)
+            labels = np.concatenate((labels, sample_labels), axis=0)
+        print(data.shape)
 
-    np.savez(output_path, x=data, labels=labels)
+        sample_names.append(sample_name)
+
+    np.savez(output_path, x=data, labels=labels, sample_names=sample_names)
 
 
 if __name__ == '__main__':
