@@ -30,8 +30,8 @@ def main():
 
     output_path = os.path.join(output_dir, "dataset.npz")
     if os.path.exists(output_path):
-        k = input("This will overwrite the existing file [{}]. [y/N] ".format(output_path))
-        if k not in ['yes', 'Y', 'y', 'YES']:
+        k = input("This will overwrite the existing file [{}]. [Y/n] ".format(output_path))
+        if k in ['no', 'n', 'N', 'NO']:
             print("Aborting.")
             return
 
@@ -48,7 +48,6 @@ def main():
             sample_name = sample_instance[2]
 
             if sample_name not in sample_responses_dict:
-                print(sample_name)
                 sample_responses_dict[sample_name] = []
 
             sample_responses_dict[sample_name].append([float(r) for r in responses])

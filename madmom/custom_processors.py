@@ -21,7 +21,13 @@ class LabelOutputProcessor(OutputProcessor):
             t1 = (i + 1) / self.fps
             for participant_responses in self.all_responses:
                 for response in participant_responses:
+                    # convert from milliseconds to seconds
                     response = response / 1000
+
+                    # modulus by the length of the clip
+                    clip_length = data.shape[0] / float(kwargs.get('fps', 0))
+                    response = response % clip_length
+
                     if t0 < response + 0.03 and response - 0.03 < t1:
                         count += 1
                         break
