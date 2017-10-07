@@ -19,8 +19,10 @@ class LabelOutputProcessor(OutputProcessor):
             count = 0
             t0 = i / self.fps
             t1 = (i + 1) / self.fps
-            for participant_responses in self.all_responses:
-                for response in participant_responses:
+            # iterate over each time this clip was presented
+            for responses in self.all_responses:
+                # iterate over each unique response (time they hit space bar)
+                for response in responses:
                     # convert from milliseconds to seconds
                     response = response / 1000
 
@@ -28,7 +30,7 @@ class LabelOutputProcessor(OutputProcessor):
                     clip_length = data.shape[0] / float(kwargs.get('fps', 0))
                     response = response % clip_length
 
-                    if t0 < response + 0.03 and response - 0.03 < t1:
+                    if t0 < response < t1:
                         count += 1
                         break
             labels[i] = count / len(self.all_responses)

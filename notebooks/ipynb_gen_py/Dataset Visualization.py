@@ -48,12 +48,18 @@ def plot_features_and_labels(i):
     plt.show()
 
 
-# In[63]:
+# In[73]:
 
 sample_idx = 0
 plot_features_and_labels(sample_idx)
 sample_path = os.path.join(sample_dir, sample_names[sample_idx])
 show_playable_audio(sample_path)
+
+
+# In[78]:
+
+print("Percent of frames with non-zero labels: {}%".format(np.count_nonzero(labels) / labels.size))
+print("Total responses: {}".format(labels.size))
 
 
 # In[ ]:
