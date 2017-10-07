@@ -29,7 +29,7 @@ print(sample_names.shape)
 
 # The first dimension is the different samples. The second dimension is the time steps of each sample (which don't have to be the same but currently are). The $x$ matrix has a third dimension which are the features of each time step in each sample.
 
-# In[62]:
+# In[3]:
 
 def plot_features_and_labels(i):
     fig = plt.figure(figsize=(20,10))
@@ -48,18 +48,19 @@ def plot_features_and_labels(i):
     plt.show()
 
 
-# In[73]:
+# In[9]:
 
-sample_idx = 0
+sample_idx = 1
 plot_features_and_labels(sample_idx)
 sample_path = os.path.join(sample_dir, sample_names[sample_idx])
 show_playable_audio(sample_path)
 
 
-# In[78]:
+# In[11]:
 
+print("Total responses: {}".format(np.count_nonzero(labels)))
+print("Total Frames: {}".format(labels.size))
 print("Percent of frames with non-zero labels: {}%".format(np.count_nonzero(labels) / labels.size))
-print("Total responses: {}".format(labels.size))
 
 
 # In[ ]:
