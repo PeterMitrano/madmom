@@ -1,3 +1,4 @@
+tensorflow
 matplotlib
 pandas
 pyaudio>=0.2.8
