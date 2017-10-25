@@ -1,4 +1,7 @@
+#!/usr/bin/env python3
+
 import argparse
+import os
 from datetime import datetime
 
 import numpy as np
@@ -23,7 +26,8 @@ class BiDirectionalRNN:
             self.num_hidden_1 = 25
             self.w1 = tf.Variable(tf.truncated_normal([self.num_hidden_1 * 2, 2]), dtype=tf.float32, name='w1')
             self.w1_steps = tf.reshape(tf.tile(self.w1, [time_steps, 1]), [time_steps, self.num_hidden_1 * 2, 2])
-            self.w1_batch = tf.reshape(tf.tile(self.w1_steps, [batch_size, 1, 1]), [batch_size, time_steps, self.num_hidden_1 * 2, 2])
+            self.w1_batch = tf.reshape(tf.tile(self.w1_steps, [batch_size, 1, 1]),
+                                       [batch_size, time_steps, self.num_hidden_1 * 2, 2])
             self.b1 = tf.Variable(tf.truncated_normal([2]), dtype=tf.float32, name='b1')
             self.fw_lstm1 = tf.nn.rnn_cell.BasicLSTMCell(self.num_hidden_1, activation=tf.tanh)
             self.bw_lstm1 = tf.nn.rnn_cell.BasicLSTMCell(self.num_hidden_1, activation=tf.tanh)
@@ -75,7 +79,8 @@ def main():
 
     if args.log:
         stamp = "{:%B_%d_%H:%M:%S}".format(datetime.now())
-        writer = tf.summary.FileWriter('log_data/' + stamp)
+        log_dir = os.path.join('log_data', stamp)
+        writer = tf.summary.FileWriter(log_dir)
         writer.add_graph(sess.graph)
 
     try:
@@ -91,7 +96,8 @@ def main():
     except KeyboardInterrupt:
         pass
 
-    saver.save(sess, 'final_project_model.ckpt')
+    if args.log:
+        saver.save(sess, os.path.join(log_dir, 'rhythmic_grouping_rnn.kcpt'))
 
 
 if __name__ == '__main__':
