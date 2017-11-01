@@ -35,8 +35,6 @@ class BiDirectionalRNN:
             self.num_hidden_1 = 25
             self.w1 = tf.Variable(tf.truncated_normal([self.num_hidden_1 * 2, 2]), dtype=tf.float32, name="w1")
             self.w1_steps = tf.reshape(tf.tile(self.w1, [time_steps, 1]), [time_steps, self.num_hidden_1 * 2, 2])
-            self.w1_batch = tf.reshape(tf.tile(self.w1_steps, [num_samples, 1, 1]),
-                                       [num_samples, time_steps, self.num_hidden_1 * 2, 2])
             self.b1 = tf.Variable(tf.truncated_normal([2]), dtype=tf.float32, name="b1")
             self.fw_lstm1 = tf.nn.rnn_cell.BasicLSTMCell(self.num_hidden_1, activation=tf.tanh)
             self.bw_lstm1 = tf.nn.rnn_cell.BasicLSTMCell(self.num_hidden_1, activation=tf.tanh)
@@ -44,6 +42,10 @@ class BiDirectionalRNN:
                                                                                    dtype=tf.float32)
             self.lstm1 = tf.concat(self.lstm_outputs, 2)
             self.lstm1_4d = tf.expand_dims(self.lstm1, 2, name="lstm1_4d")
+
+        with tf.name_scope("fc"):
+            self.w1_batch = tf.reshape(tf.tile(self.w1_steps, [num_samples, 1, 1]),
+                                       [num_samples, time_steps, self.num_hidden_1 * 2, 2])
             self.z1 = tf.matmul(self.lstm1_4d, self.w1_batch, name="matmul1") + self.b1
 
             tf.summary.histogram(self.w1.name, self.w1)
@@ -118,7 +120,7 @@ def model_only(args):
 
 def train(args):
     time_steps = 200
-    num_samples = 14
+    num_samples = 10
     summary_frequency = 25
     m = BiDirectionalRNN(time_steps, num_samples)
 
@@ -140,7 +142,8 @@ def train(args):
             fixed_length_x = x[:num_samples, 0:time_steps, :]
             fixed_length_labels = labels[:num_samples, 0:time_steps]
             step, s, loss, y_hat, _ = sess.run([m.global_step, summaries, m.loss, m.y_hat, m.train_step],
-                                        feed_dict={m.forwards_x: fixed_length_x, m.labels_single: fixed_length_labels})
+                                               feed_dict={m.forwards_x: fixed_length_x,
+                                                          m.labels_single: fixed_length_labels})
             if j % summary_frequency == 0:
                 if args.log:
                     writer.add_summary(s, step)
@@ -152,7 +155,6 @@ def train(args):
 
     plot(y_hat, fixed_length_labels, sample_names[0], sample_idx=0)
 
-
     if args.log:
         os.environ['TF_LOG_DIR'] = log_dir
         saver.save(sess, os.path.join(log_dir, "rhythmic_grouping_rnn.ckpt"))
@@ -160,7 +162,7 @@ def train(args):
 
 def test(args):
     time_steps = 200
-    num_samples = 4
+    num_samples = 15
 
     sess, x_test, labels_test, sample_names, summaries = common(args)
 
@@ -171,12 +173,11 @@ def test(args):
 
     fixed_length_x = x_test[:num_samples, 0:time_steps, :]
     fixed_length_labels = labels_test[:num_samples, 0:time_steps]
-    y_hat, loss = sess.run([m.y_hat, m.loss],
+    y_hat, loss_per_sample = sess.run([m.y_hat, m.loss_per_sample],
                            feed_dict={m.forwards_x: fixed_length_x, m.labels_single: fixed_length_labels})
 
-    print("Test Loss", loss)
-
     for test_idx in range(num_samples):
+        print("Test Loss", loss_per_sample[test_idx])
         plt.figure()
         plt.plot(y_hat[test_idx, :, 0, 0], label="y_hat")
         plt.plot(fixed_length_labels[test_idx], label="labels")
