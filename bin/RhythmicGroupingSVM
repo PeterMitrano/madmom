@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+
+import argparse
+import pickle
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn import svm
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+
+    train_subparser = subparsers.add_parser("train")
+    train_subparser.add_argument("train_set", help="npz file with training set")
+    train_subparser.add_argument("--save", "-s", action="store_true", help="to save or not to save")
+    train_subparser.add_argument("--penalty", "-c", help="Penalty parameter C of the error term.", default=1)
+    train_subparser.add_argument("--kernel", "-k", help="one of [linear, polynomial rbg, sigmoid]", default='linear')
+    train_subparser.add_argument("--degree", "-d", type=float, help="degree [only with polynomial]", default=1)
+    train_subparser.add_argument("--coeff0", "-o", type=float, help="intercept [only with polynomial]", default=0)
+    train_subparser.set_defaults(func=train)
+
+    test_subparser = subparsers.add_parser("test")
+    test_subparser.add_argument("test_set", help="npz file with test set")
+    test_subparser.add_argument("model_file", help="the pickle file of saved weights")
+    test_subparser.set_defaults(func=test)
+
+    model_only_subparser = subparsers.add_parser("model_only")
+    test_subparser.add_argument("model_file", help="the pickle file of saved weights")
+    model_only_subparser.set_defaults(func=model_only)
+
+    args = parser.parse_args()
+
+    if args == argparse.Namespace():
+        parser.print_usage()
+    else:
+        args.func(args)
+
+
+def model_only(args):
+    model = pickle.loads(open(args.model_file, 'rb'))
+    print(model.support_vectors_)
+
+
+def train(args):
+    n_frames = 20
+
+    train_set = np.load(args.train_set)
+    x = train_set["x"]
+    labels = train_set["labels"]
+    sample_names = train_set["sample_names"]
+
+    bits = []
+    bit_labels = []
+    for sample in x:
+        # chop up each samples into short segments
+        for idx in range(0, len(sample) - n_frames, 1):
+            bit = sample[idx:idx+n_frames]
+            bits.append(bit.flatten())
+            bit_labels = labels[]
+
+    model = svm.SVC(C=args.penalty, kernel=args.kernel, degree=args.degree, verbose=True)
+
+    bits = np.array(bits)
+    model.fit(bits, bit_labels)
+
+    if args.save:
+        s = pickle.dumps(model)
+
+    # plot(y_hat, fixed_length_labels, sample_names[0], sample_idx=0)
+
+
+def test(args):
+    time_steps = 200
+    num_samples = 15
+
+    test_set = np.load(args.test_set)
+    x = test_set["x"]
+    labels = test_set["labels"]
+    sample_names = test_set["sample_names"]
+
+    model = pickle.loads(open(args.model_file, 'rb'))
+    model.predict()
+
+    # for test_idx in range(num_samples):
+    #     print("Test Loss", loss_per_sample[test_idx])
+    #     plt.figure()
+    #     plt.plot(y_hat[test_idx, :, 0, 0], label="y_hat")
+    #     plt.plot(fixed_length_labels[test_idx], label="labels")
+    #     plt.ylabel("% likelihood of start of group")
+    #     plt.xlabel("time")
+    #     plt.title("Test on sample {} ({})".format(test_idx, sample_names[test_idx]))
+    #
+    # plt.show()
+
+
+def plot(y_hat, fixed_length_labels, sample_name, sample_idx):
+    plt.plot(y_hat[sample_idx, :, 0, 0], label="y_hat")
+    plt.plot(fixed_length_labels[sample_idx], label="labels")
+    plt.ylabel("% likelihood of start of group")
+    plt.xlabel("time")
+    plt.title("Test on sample " + sample_name)
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()

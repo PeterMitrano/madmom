@@ -59,7 +59,7 @@ class TfRhythmicGroupingPreProcessor(SequentialProcessor):
         multi = ParallelProcessor([])
         # frame size of 1024 means 1024 samples per frame, and with 44100 samples per second
         # that equals 23.22 milliseconds per frame
-        frame_sizes = [1024, 2048, 4096]
+        frame_sizes = kwargs.get('frame_sizes', [1024, 2048, 4096])
         num_bands_list = [3, 6, 12]
         for frame_size, num_bands in zip(frame_sizes, num_bands_list):
             frames = FramedSignalProcessor(frame_size=frame_size, fps=100)

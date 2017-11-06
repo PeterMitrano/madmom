@@ -22,6 +22,8 @@ def main():
     parser.add_argument('--fps', action='store', type=float, default=100, help='frames per second [default=100]')
     args = parser.parse_args()
 
+    setattr(args, 'frame_sizes', [1024, 2048, 4096])
+
     responses_dir = os.path.join(args.data_directory, "responses")
     samples_dir = os.path.join(args.data_directory, "samples")
     output_dir = os.path.join(args.data_directory, "dataset")
