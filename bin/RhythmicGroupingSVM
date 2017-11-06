@@ -13,6 +13,7 @@ def main():
 
     train_subparser = subparsers.add_parser("train")
     train_subparser.add_argument("train_set", help="npz file with training set")
+    train_subparser.add_argument("model_file", help="pickle file to save the model in")
     train_subparser.add_argument("--save", "-s", action="store_true", help="to save or not to save")
     train_subparser.add_argument("--penalty", "-c", help="Penalty parameter C of the error term.", default=1)
     train_subparser.add_argument("--kernel", "-k", help="one of [linear, polynomial rbg, sigmoid]", default='linear')
@@ -22,11 +23,11 @@ def main():
 
     test_subparser = subparsers.add_parser("test")
     test_subparser.add_argument("test_set", help="npz file with test set")
-    test_subparser.add_argument("model_file", help="the pickle file of saved weights")
+    test_subparser.add_argument("model_file", help="the pickle file of the saved model")
     test_subparser.set_defaults(func=test)
 
     model_only_subparser = subparsers.add_parser("model_only")
-    test_subparser.add_argument("model_file", help="the pickle file of saved weights")
+    model_only_subparser.add_argument("model_file", help="the pickle file of the saved model")
     model_only_subparser.set_defaults(func=model_only)
 
     args = parser.parse_args()
@@ -52,20 +53,21 @@ def train(args):
 
     bits = []
     bit_labels = []
-    for sample in x:
+    for sample, sample_labels in zip(x, labels):
         # chop up each samples into short segments
         for idx in range(0, len(sample) - n_frames, 1):
             bit = sample[idx:idx+n_frames]
             bits.append(bit.flatten())
-            bit_labels = labels[]
+            # the label for each bit is the label for the last frame in the bit
+            bit_labels.append(int(np.ceil(sample_labels[idx + n_frames])))
 
     model = svm.SVC(C=args.penalty, kernel=args.kernel, degree=args.degree, verbose=True)
 
-    bits = np.array(bits)
+    bits = np.array(bits, dtype=np.int)
     model.fit(bits, bit_labels)
 
     if args.save:
-        s = pickle.dumps(model)
+        pickle.dump(model, open(args.model_file))
 
     # plot(y_hat, fixed_length_labels, sample_names[0], sample_idx=0)
 

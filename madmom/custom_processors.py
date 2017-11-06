@@ -41,6 +41,7 @@ class LabelOutputProcessor(OutputProcessor):
                     # If this response falls within the time range of our frame use it as a label
                     # Note one response may fall within the range of a few sequential frames
                     if t0 < response < t1:
+                        window_center_idx = max_frame_size / 2
                         window_idx = int((response - t0) * max_frame_size / max_frame_duration_s)
                         w = np.hanning(max_frame_size)[window_idx]
                         labels[i] = 1 * w
