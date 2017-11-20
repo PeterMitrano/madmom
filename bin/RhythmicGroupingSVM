@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
 import pickle
+from datetime import datetime
+
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 from sklearn import svm
 
 
@@ -13,8 +17,7 @@ def main():
 
     train_subparser = subparsers.add_parser("train")
     train_subparser.add_argument("train_set", help="npz file with training set")
-    train_subparser.add_argument("model_file", help="pickle file to save the model in")
-    train_subparser.add_argument("--save", "-s", action="store_true", help="to save or not to save")
+    train_subparser.add_argument("model_directory", help="directory to save the model in. it will be named with a date")
     train_subparser.add_argument("--penalty", "-c", help="Penalty parameter C of the error term.", default=1)
     train_subparser.add_argument("--kernel", "-k", help="one of [linear, polynomial rbg, sigmoid]", default='linear')
     train_subparser.add_argument("--degree", "-d", type=float, help="degree [only with polynomial]", default=1)
@@ -56,7 +59,7 @@ def train(args):
     for sample, sample_labels in zip(x, labels):
         # chop up each samples into short segments
         for idx in range(0, len(sample) - n_frames, 1):
-            bit = sample[idx:idx+n_frames]
+            bit = sample[idx:idx + n_frames]
             bits.append(bit.flatten())
             # the label for each bit is the label for the last frame in the bit
             bit_labels.append(int(np.ceil(sample_labels[idx + n_frames])))
@@ -66,34 +69,40 @@ def train(args):
     bits = np.array(bits, dtype=np.int)
     model.fit(bits, bit_labels)
 
-    if args.save:
-        pickle.dump(model, open(args.model_file))
+    stamp = "{:%B_%d_%H:%M:%S}".format(datetime.now())
+    model_name = stamp + "_model.pkl"
+    model_full_filename = os.path.join(args.model_directory, model_name)
+    pickle.dump(model, open(model_full_filename, 'wb'))
 
     # plot(y_hat, fixed_length_labels, sample_names[0], sample_idx=0)
 
 
 def test(args):
-    time_steps = 200
-    num_samples = 15
+    n_frames = 20
 
     test_set = np.load(args.test_set)
     x = test_set["x"]
     labels = test_set["labels"]
     sample_names = test_set["sample_names"]
 
-    model = pickle.loads(open(args.model_file, 'rb'))
-    model.predict()
+    bits = []
+    bit_labels = []
+    for sample, sample_labels in zip(x, labels):
+        # chop up each samples into short segments
+        for idx in range(0, len(sample) - n_frames, 1):
+            bit = sample[idx:idx + n_frames]
+            bits.append(bit.flatten())
+            # the label for each bit is the label for the last frame in the bit
+            bit_labels.append(int(np.ceil(sample_labels[idx + n_frames])))
 
-    # for test_idx in range(num_samples):
-    #     print("Test Loss", loss_per_sample[test_idx])
-    #     plt.figure()
-    #     plt.plot(y_hat[test_idx, :, 0, 0], label="y_hat")
-    #     plt.plot(fixed_length_labels[test_idx], label="labels")
-    #     plt.ylabel("% likelihood of start of group")
-    #     plt.xlabel("time")
-    #     plt.title("Test on sample {} ({})".format(test_idx, sample_names[test_idx]))
-    #
-    # plt.show()
+
+    bits = np.array(bits, dtype=np.int)
+    model = pickle.load(open(args.model_file, 'rb'))
+    print("unpickling done")
+    y = model.predict(bits)
+    print(y)
+
+    # plot(y_hat, fixed_length_labels, sample_names[0], sample_idx=0)
 
 
 def plot(y_hat, fixed_length_labels, sample_name, sample_idx):
