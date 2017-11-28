@@ -95,7 +95,6 @@ def test(args):
             # the label for each bit is the label for the last frame in the bit
             bit_labels.append(int(np.ceil(sample_labels[idx + n_frames])))
 
-
     bits = np.array(bits, dtype=np.int)
     model = pickle.load(open(args.model_file, 'rb'))
     print("unpickling done")
