@@ -5,7 +5,7 @@
 # 
 # This notebook is scratch for investigating and visualizing our dataset(s)
 
-# In[8]:
+# In[2]:
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,7 +13,7 @@ from util import show_playable_audio
 import os
 
 
-# In[15]:
+# In[3]:
 
 base_dir = "study_v1.1_data/"
 dataset = np.load(os.path.join(base_dir, "dataset/dataset.npz"))
@@ -29,7 +29,7 @@ print(sample_names.shape)
 
 # The first dimension is the different samples. The second dimension is the time steps of each sample (which don't have to be the same but currently are). The $x$ matrix has a third dimension which are the features of each time step in each sample.
 
-# In[16]:
+# In[4]:
 
 def plot_features_and_labels(i):
     fig = plt.figure(figsize=(20,10))
@@ -48,11 +48,12 @@ def plot_features_and_labels(i):
     plt.show()
 
 
-# In[20]:
+# In[5]:
 
 sample_idx = 6
 plot_features_and_labels(sample_idx)
 sample_path = os.path.join(sample_dir, sample_names[sample_idx])
+print(sample_path)
 show_playable_audio(sample_path)
 
 
