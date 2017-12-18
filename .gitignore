@@ -12,7 +12,6 @@
 
 # ipython notebook files
 .ipynb_checkpoints
-*.ipynb
 
 # Python egg
 /madmom.egg-info/
